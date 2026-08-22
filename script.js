@@ -5,10 +5,22 @@ const statusEl = document.getElementById('status');
 if (callbackUrl)
 {
     statusEl.innerText = 'Connected to HUD.';
+    sendPing(); // wake the connection/focus immediately, before the user clicks anything
+    setInterval(sendPing, 4 * 60 * 1000); // re-ping every 4 min to prevent idle timeout
 }
 else
 {
     statusEl.innerText = 'No callback URL found (open this page from the HUD in-world).';
+}
+
+function sendPing()
+{
+    if (!callbackUrl)
+    {
+        return;
+    }
+    fetch(callbackUrl + '?cmd=' + encodeURIComponent('ping'), { mode: 'no-cors' })
+        .catch((err) => console.error('ping failed', err));
 }
 
 function sendCommand(n)
