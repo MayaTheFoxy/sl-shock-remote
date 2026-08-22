@@ -1,42 +1,50 @@
 const params = new URLSearchParams(window.location.search);
 const callbackUrl = params.get('cb');
 const statusEl = document.getElementById('status');
+const xInput = document.getElementById('inputX');
+const yInput = document.getElementById('inputY');
+
+if (params.has('x'))
+{
+    xInput.value = params.get('x');
+}
+if (params.has('y'))
+{
+    yInput.value = params.get('y');
+}
 
 if (callbackUrl)
 {
     statusEl.innerText = 'Connected to HUD.';
     sendPing(); // wake the connection/focus immediately, before the user clicks anything
-    setInterval(sendPing, 4 * 60 * 1000); // re-ping every 4 min to prevent idle timeout
+    setInterval(sendPing, 3 * 60 * 1000); // re-ping every 4 min to prevent idle timeout
 }
 else
 {
     statusEl.innerText = 'No callback URL found (open this page from the HUD in-world).';
 }
 
-function sendPing()
+function sendData(queryString)
 {
     if (!callbackUrl)
     {
-        return;
+        statusEl.innerText = 'No callback URL — cannot send.';
+        return Promise.reject(new Error('no callback url'));
     }
-    fetch(callbackUrl + '?cmd=' + encodeURIComponent('ping'), { mode: 'no-cors' })
-        .catch((err) => console.error('ping failed', err));
+    return fetch(callbackUrl + '?' + queryString, { mode: 'no-cors' });
+}
+
+function sendPing()
+{
+    sendData('cmd=' + encodeURIComponent('ping'))
+    .catch((err) => console.error('ping failed', err));
 }
 
 function sendCommand(n)
 {
-    if (!callbackUrl)
-    {
-        statusEl.innerText = 'No callback URL — cannot send command.';
-        return;
-    }
-
     const command = 'example ' + n;
-
-    // mode: 'no-cors' because we can't read the LSL response anyway,
-    // we just need the request to reach the script.
-    fetch(callbackUrl + '?cmd=' + encodeURIComponent(command), { mode: 'no-cors' })
-    .then(() => 
+    sendData('cmd=' + encodeURIComponent(command))
+    .then(() =>
     {
         statusEl.innerText = 'Sent: ' + command;
     })
@@ -46,3 +54,15 @@ function sendCommand(n)
         console.error(err);
     });
 }
+
+xInput.addEventListener('change', () => {
+  sendData('cmd=setx&value=' + encodeURIComponent(xInput.value))
+    .then(() => { statusEl.innerText = 'X updated: ' + xInput.value; })
+    .catch((err) => { statusEl.innerText = 'Error updating X.'; console.error(err); });
+});
+
+yInput.addEventListener('change', () => {
+  sendData('cmd=sety&value=' + encodeURIComponent(yInput.value))
+    .then(() => { statusEl.innerText = 'Y updated: ' + yInput.value; })
+    .catch((err) => { statusEl.innerText = 'Error updating Y.'; console.error(err); });
+});
