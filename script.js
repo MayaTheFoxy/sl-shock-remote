@@ -17,7 +17,7 @@ if (callbackUrl)
 {
     statusEl.innerText = 'Connected to HUD.';
     sendPing(); // wake the connection/focus immediately, before the user clicks anything
-    setInterval(sendPing, 3 * 60 * 1000); // re-ping every 4 min to prevent idle timeout
+    setInterval(sendPing, 3 * 60 * 1000); // re-ping every 3 min to prevent idle timeout
 }
 else
 {
@@ -36,8 +36,8 @@ function sendData(queryString)
 
 function sendPing()
 {
-    sendData('cmd=' + encodeURIComponent('ping'))
-    .catch((err) => console.error('ping failed', err));
+    // sendData('cmd=' + encodeURIComponent('ping'))
+    // .catch((err) => console.error('ping failed', err));
 }
 
 function sendCommand(n)
